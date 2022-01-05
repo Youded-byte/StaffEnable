@@ -35,9 +35,14 @@ public class Agent {
                 if(classfileBuffer == null || classfileBuffer.length == 0)
                     return new byte[0];
 
+                if(!className.startsWith("lunar/")) return classfileBuffer;
+
                 ClassReader cr = new ClassReader(classfileBuffer);
+
+                if(cr.getInterfaces().length != 0) return classfileBuffer;
+
                 ClassNode cn = new ClassNode();
-                cr.accept(cn, ClassReader.SKIP_FRAMES);
+                cr.accept(cn, 0);
 
                 if (isStaffModuleClass(cn)) {
                     for(MethodNode method : cn.methods){
@@ -45,9 +50,9 @@ public class Agent {
                             InsnList inject = new InsnList();
                             inject.add(new InsnNode(Opcodes.ICONST_1));
                             inject.add(new InsnNode(Opcodes.IRETURN));
-                            method.instructions.insert(inject);
+                            method.instructions = inject;
 
-                            ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_FRAMES);
+                            ClassWriter cw = new ClassWriter(cr, 0);
                             cn.accept(cw);
                             return cw.toByteArray();
                         }
